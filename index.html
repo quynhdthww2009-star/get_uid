@@ -2,158 +2,77 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hệ Thống Điều Khiển Màu Realtime</title>
+    <title>Hệ Thống Lấy Link Facebook Realtime</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
-    
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            text-align: center; 
-            padding: 50px 20px; 
-            background-color: #e9ecef;
-            margin: 0;
-        }
-        .card { 
-            background: white; 
-            padding: 30px; 
-            border-radius: 15px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-            display: inline-block;
-            max-width: 400px;
-            width: 100%;
-        }
-        h2 { color: #333; margin-bottom: 20px; }
-        input { 
-            padding: 12px; 
-            border: 2px solid #ddd; 
-            border-radius: 8px; 
-            width: 80%; 
-            font-size: 18px;
-            margin-bottom: 20px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-        input:focus { border-color: #28a745; }
-        button { 
-            padding: 12px 30px; 
-            background: #28a745; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 18px; 
-            font-weight: bold;
-            cursor: pointer; 
-            transition: background 0.3s;
-            width: 86%;
-        }
-        button:hover { background: #218838; }
-        button:active { transform: scale(0.98); }
-        
-        #status { 
-            margin-top: 20px; 
-            font-size: 14px; 
-            font-weight: bold;
-            color: #6c757d; 
-        }
-        .status-dot {
-            height: 10px;
-            width: 10px;
-            background-color: #bbb;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-        }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 50px 20px; background-color: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: inline-block; max-width: 450px; width: 100%; }
+        h2 { color: #1877f2; margin-bottom: 10px; }
+        p { color: #606770; font-size: 14px; margin-bottom: 25px; }
+        input { padding: 12px; border: 1px solid #dddfe2; border-radius: 6px; width: 85%; font-size: 16px; margin-bottom: 15px; outline: none; }
+        input:focus { border-color: #1877f2; box-shadow: 0 0 0 2px #e7f3ff; }
+        button { padding: 12px; background: #1877f2; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; width: 92%; transition: 0.2s; }
+        button:hover { background: #166fe5; }
+        #status { margin-top: 20px; font-size: 13px; font-weight: bold; color: #8a8d91; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>Pha Màu Từ Xa</h2>
-        <p style="color: #666; font-size: 14px;">Nhập ID màu (VD: 123 cho màu Tím)</p>
+        <h2>Facebook Link Collector</h2>
+        <p>Dán link Facebook của bạn vào ô dưới đây</p>
         
-        <input type="number" id="idInput" placeholder="Nhập mã ID..." min="1">
+        <input type="text" id="fbLinkInput" placeholder="https://www.facebook.com/profile.php?id=...">
         <br>
-        <button onclick="sendData()">GỬI LỆNH NGAY</button>
+        <button onclick="sendData()">GỬI LINK VỀ PYTHON</button>
         
         <div id="status">
-            <span id="dot" class="status-dot"></span>
-            <span id="statusText">Đang kết nối tới máy chủ...</span>
+            <span id="statusText">Đang kết nối server...</span>
         </div>
     </div>
 
     <script>
-        // --- CẤU HÌNH ---
-        // Tên topic phải TRÙNG KHỚP với biến TOPIC trong file Python của bạn
-        const TOPIC = "phamaumay_2026_xyz_unique"; 
+        // TOPIC BÍ MẬT (Cố định theo ý bạn)
+        const TOPIC = "get_idfacebookabcxyz"; 
         
-        // Sử dụng cổng 8884 cho kết nối WSS (WebSocket Secure) để chạy được trên GitHub
-        const client = new Paho.MQTT.Client("broker.hivemq.com", 8884, "web_user_" + Math.random().toString(16).substr(2, 8));
+        const client = new Paho.MQTT.Client("broker.hivemq.com", 8884, "web_fb_" + Math.random().toString(16).substr(2, 5));
 
-        // Xử lý khi mất kết nối
-        client.onConnectionLost = (responseObject) => {
-            updateStatus("Mất kết nối! Đang thử lại...", "#dc3545");
-            console.log("Mất kết nối: " + responseObject.errorMessage);
-            setTimeout(connect, 3000); // Thử kết nối lại sau 3 giây
+        client.onConnectionLost = (obj) => {
+            document.getElementById("statusText").innerText = "Mất kết nối! Đang thử lại...";
+            setTimeout(connect, 3000);
         };
 
-        // Hàm thực hiện kết nối
         function connect() {
-            console.log("Đang thử kết nối...");
             client.connect({ 
-                onSuccess: onConnect,
-                onFailure: (err) => {
-                    console.log("Kết nối thất bại: ", err);
-                    updateStatus("Lỗi kết nối. Đang thử lại...", "#dc3545");
-                    setTimeout(connect, 5000);
+                onSuccess: () => {
+                    document.getElementById("statusText").innerText = "Trạng thái: Đã sẵn sàng nhận link";
+                    document.getElementById("statusText").style.color = "#28a745";
                 },
-                useSSL: true, // BẮT BUỘC cho GitHub Pages
+                useSSL: true,
                 timeout: 5
             });
         }
 
-        // Khi kết nối thành công
-        function onConnect() {
-            console.log("Kết nối MQTT thành công!");
-            updateStatus("Trạng thái: Đã kết nối (Sẵn sàng)", "#28a745");
-        }
-
-        // Hàm cập nhật giao diện trạng thái
-        function updateStatus(text, color) {
-            const statusText = document.getElementById("statusText");
-            const dot = document.getElementById("dot");
-            statusText.innerText = text;
-            statusText.style.color = color;
-            dot.style.background = color;
-        }
-
-        // Hàm gửi dữ liệu
         function sendData() {
-            const inputElement = document.getElementById("idInput");
-            const val = inputElement.value;
-            
-            if (!val) {
-                alert("Vui lòng nhập một mã số!");
+            const fbLink = document.getElementById("fbLinkInput").value;
+            if(!fbLink) {
+                alert("Vui lòng dán link Facebook!");
                 return;
             }
 
             if (client.isConnected()) {
-                const message = new Paho.MQTT.Message(val);
+                const message = new Paho.MQTT.Message(fbLink);
                 message.destinationName = TOPIC;
                 client.send(message);
-                
-                // Hiệu ứng thông báo nhỏ
-                console.log("Đã gửi ID: " + val + " tới topic: " + TOPIC);
-                alert("Đã gửi ID: " + val + " thành công!");
-                inputElement.value = ""; // Xóa ô nhập sau khi gửi
+                alert("Đã gửi link thành công!");
+                document.getElementById("fbLinkInput").value = ""; 
             } else {
-                alert("Chưa kết nối được máy chủ. Vui lòng đợi trong giây lát!");
+                alert("Chưa kết nối được server!");
             }
         }
 
-        // Bắt đầu kết nối khi tải trang
         connect();
     </script>
-
 </body>
 </html>

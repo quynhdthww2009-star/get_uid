@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hệ Thống Điều Khiển Màu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <style>
+        body { font-family: Arial; text-align: center; padding: 20px; background: #f4f4f4; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 150px; }
+        button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #status { margin-top: 10px; font-size: 12px; color: gray; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Nhập mã màu (ID)</h2>
+        <input type="number" id="idInput" placeholder="Ví dụ: 123">
+        <button onclick="sendData()">Gửi Lệnh</button>
+        <div id="status">Đang kết nối...</div>
+    </div>
+
+    <script>
+        // Tên topic ĐỘC NHẤT để không bị người khác điều khiển nhầm
+        const TOPIC = "phamaumay_2026_xyz_unique"; 
+        const client = new Paho.MQTT.Client("broker.hivemq.com", 8000, "web_" + Math.random());
+
+        client.onConnectionLost = (obj) => {
+            document.getElementById("status").innerText = "Mất kết nối! Đang thử lại...";
+            setTimeout(connect, 3000);
+        };
+
+        function connect() {
+            client.connect({ onSuccess: () => {
+                document.getElementById("status").innerText = "Trạng thái: Đã kết nối (Sẵn sàng)";
+                document.getElementById("status").style.color = "green";
+            }});
+        }
+
+        function sendData() {
+            const val = document.getElementById("idInput").value;
+            if(!val) return;
+            const msg = new Paho.MQTT.Message(val);
+            msg.destinationName = TOPIC;
+            client.send(msg);
+            alert("Đã gửi ID: " + val);
+        }
+
+        connect(); // Chạy kết nối khi mở trang
+    </script>
+</body>
+</html>

@@ -11,173 +11,129 @@
             --fb-bg: #f0f2f5;
             --text-main: #1c1e21;
             --text-sub: #606770;
+            --error: #fa3e3e;
+            --success: #42b72a;
         }
 
         body { 
             font-family: 'Segoe UI', Tahoma, Helvetica, Arial, sans-serif; 
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: var(--fb-bg); 
-            margin: 0; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            min-height: 100vh; background-color: var(--fb-bg); margin: 0; 
         }
 
         .card { 
-            background: white; 
-            padding: 40px 30px; 
-            border-radius: 12px; 
-            box-shadow: 0 12px 28px 0 rgba(0, 0, 0, 0.1), 0 2px 4px 0 rgba(0, 0, 0, 0.05); 
-            max-width: 400px; 
-            width: 90%;
-            text-align: center;
-            transition: transform 0.3s ease;
+            background: white; padding: 30px; border-radius: 12px; 
+            box-shadow: 0 12px 28px rgba(0,0,0,0.1); max-width: 450px; width: 90%; text-align: center;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        h2 { 
-            color: var(--fb-blue); 
-            margin: 0 0 10px 0; 
-            font-size: 28px;
-            font-weight: 800;
-        }
-
-        p { 
-            color: var(--text-sub); 
-            font-size: 15px; 
-            margin-bottom: 30px; 
-            line-height: 1.4;
-        }
-
-        .input-group {
-            position: relative;
-            margin-bottom: 20px;
-        }
+        h2 { color: var(--fb-blue); margin: 0 0 10px 0; font-size: 28px; font-weight: 800; }
+        p { color: var(--text-sub); font-size: 14px; margin-bottom: 20px; }
 
         input { 
-            padding: 14px 16px; 
-            border: 1px solid #dddfe2; 
-            border-radius: 8px; 
-            width: 100%; 
-            box-sizing: border-box;
-            font-size: 17px; 
-            outline: none; 
-            transition: all 0.2s;
-        }
-
-        input:focus { 
-            border-color: var(--fb-blue); 
-            box-shadow: 0 0 0 2px #e7f3ff; 
+            padding: 12px; border: 1px solid #dddfe2; border-radius: 8px; 
+            width: 100%; box-sizing: border-box; font-size: 16px; outline: none; margin-bottom: 15px;
         }
 
         button { 
-            padding: 12px; 
-            background: var(--fb-blue); 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 20px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            width: 100%; 
-            transition: background 0.2s, transform 0.1s; 
+            padding: 12px; background: var(--fb-blue); color: white; border: none; 
+            border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; 
         }
 
-        button:hover { 
-            background: #166fe5; 
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        #status { 
-            margin-top: 25px; 
-            font-size: 13px; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .dot {
-            height: 8px;
-            width: 8px;
-            border-radius: 50%;
-            background-color: #ccd0d5;
-        }
-
-        .status-text {
-            color: var(--text-sub);
-            font-weight: 600;
-        }
-
-        /* Dòng chữ dev-nminhh nhỏ ở dưới */
-        .footer {
+        /* --- LOG CONSOLE STYLE --- */
+        .log-container {
             margin-top: 20px;
+            background: #1c1e21;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: left;
+            height: 120px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
             font-size: 12px;
-            color: #90949c;
-            letter-spacing: 1px;
-            font-weight: 500;
+            border: 1px solid #333;
         }
 
-        .footer span {
-            color: var(--fb-blue);
-            font-weight: bold;
+        .log-entry {
+            margin-bottom: 5px;
+            border-bottom: 1px solid #2d2d2d;
+            padding-bottom: 2px;
+            word-break: break-all;
         }
+
+        .log-time { color: #888; margin-right: 5px; }
+        .log-msg-success { color: #42b72a; }
+        .log-msg-error { color: #fa3e3e; }
+        .log-msg-info { color: #5bc0de; }
+
+        #status { margin-top: 15px; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .dot { height: 8px; width: 8px; border-radius: 50%; background-color: #ccd0d5; }
+        .footer { margin-top: 20px; font-size: 11px; color: #90949c; }
     </style>
 </head>
 <body>
 
     <div class="card">
         <h2>facebook</h2>
-        <p>Kết nối và chia sẻ link của bạn với hệ thống Python realtime.</p>
+        <p>Hệ thống mời thành viên tự động</p>
         
-        <div class="input-group">
-            <input type="text" id="fbLinkInput" placeholder="Dán link Facebook vào đây...">
+        <input type="text" id="fbLinkInput" placeholder="Dán link Facebook profile...">
+        <button onclick="sendData()">Thêm vào nhóm</button>
+
+        <div class="log-container" id="logConsole">
+            <div class="log-entry log-msg-info">> Sẵn sàng nhận log...</div>
         </div>
-        
-        <button onclick="sendData()">Gửi dữ liệu</button>
         
         <div id="status">
             <div id="statusDot" class="dot"></div>
-            <span id="statusLabel" class="status-text">Đang kết nối...</span>
+            <span id="statusLabel">Đang kết nối...</span>
         </div>
     </div>
 
-    <div class="footer">
-        © 2026 Developed by <span>dev-nminhh</span>
-    </div>
+    <div class="footer">© 2026 Developed by <b>dev-nminhh</b></div>
 
     <script>
-        const TOPIC = "get_idfacebookabcxyz"; 
+        const TOPIC_SEND = "get_idfacebookabcxyz";
+        const TOPIC_RES = "get_idfacebookabcxyz_res";
         
-        const client = new Paho.MQTT.Client("broker.hivemq.com", 8884, "web_fb_" + Math.random().toString(16).substr(2, 5));
+        const client = new Paho.MQTT.Client("broker.hivemq.com", 8884, "web_user_" + Math.random().toString(16).substr(2, 5));
 
-        client.onConnectionLost = (obj) => {
+        // Khi có tin nhắn từ Python trả về
+        client.onMessageArrived = (message) => {
+            addLog(message.payloadString);
+        };
+
+        client.onConnectionLost = () => {
             updateStatus("Mất kết nối", "#fa3e3e");
             setTimeout(connect, 3000);
         };
 
+        function addLog(text) {
+            const consoleObj = document.getElementById("logConsole");
+            const entry = document.createElement("div");
+            entry.className = "log-entry";
+            
+            const time = new Date().toLocaleTimeString();
+            const isError = text.includes("❌");
+            const colorClass = isError ? "log-msg-error" : "log-msg-success";
+            
+            entry.innerHTML = `<span class="log-time">[${time}]</span><span class="${colorClass}">${text}</span>`;
+            consoleObj.appendChild(entry);
+            consoleObj.scrollTop = consoleObj.scrollHeight; // Cuộn xuống cuối
+        }
+
         function updateStatus(text, color) {
-            const label = document.getElementById("statusLabel");
-            const dot = document.getElementById("statusDot");
-            label.innerText = text;
-            label.style.color = color;
-            dot.style.backgroundColor = color;
+            document.getElementById("statusLabel").innerText = text;
+            document.getElementById("statusLabel").style.color = color;
+            document.getElementById("statusDot").style.backgroundColor = color;
         }
 
         function connect() {
             client.connect({ 
                 onSuccess: () => {
-                    updateStatus("Hệ thống đã sẵn sàng", "#42b72a");
+                    updateStatus("Hệ thống trực tuyến", "#42b72a");
+                    client.subscribe(TOPIC_RES); // Đăng ký nhận log
                 },
                 useSSL: true,
-                timeout: 5,
                 onFailure: () => {
                     updateStatus("Lỗi kết nối", "#fa3e3e");
                     setTimeout(connect, 3000);
@@ -186,20 +142,19 @@
         }
 
         function sendData() {
-            const fbLink = document.getElementById("fbLinkInput").value;
-            if(!fbLink) {
-                alert("Vui lòng nhập nội dung!");
-                return;
-            }
+            const input = document.getElementById("fbLinkInput");
+            const val = input.value.strip ? input.value.strip() : input.value;
+            
+            if(!val) return alert("Vui lòng nhập link!");
 
             if (client.isConnected()) {
-                const message = new Paho.MQTT.Message(fbLink);
-                message.destinationName = TOPIC;
+                const message = new Paho.MQTT.Message(val);
+                message.destinationName = TOPIC_SEND;
                 client.send(message);
-                alert("Đã gửi thông tin thành công!");
-                document.getElementById("fbLinkInput").value = ""; 
+                addLog("📡 Đã gửi link: " + val.substring(0, 30) + "...");
+                input.value = ""; 
             } else {
-                alert("Server chưa sẵn sàng, vui lòng đợi!");
+                alert("Mất kết nối tới Server!");
             }
         }
 
